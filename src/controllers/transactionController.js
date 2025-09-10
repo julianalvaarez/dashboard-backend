@@ -2,32 +2,15 @@ import { getMonthRange } from '../helpers/getMonthRange.js';
 import { supabase } from '../utils/Supabase.js';
 
 export const addTransaction = async (req, res) => {
-    const { description, amount, type, playerId, dates } = req.body
-
-    if (!description || !amount || !type || !playerId || !dates?.length) {
-        return res.status(400).json({ error: "Faltan parámetros" })
-    }
-
+    const transactionData = req.body;
     try {
-        // Generar array de transacciones
-        const txs = dates.map((dateStr) => {
-            const d = new Date(dateStr)
-            return {
-                description,
-                amount,
-                type,
-                player_id: playerId,
-                date: new Date(d.getFullYear(), d.getMonth(), 1).toISOString(), // 👈 día 1 del mes
-            }
-        })
+        const { error } = await supabase.from("transactions").insert([{ ...transactionData }]);
 
-        const { data, error } = await supabase.from("transactions").insert(txs)
+        if (error) res.status(404).json({ error: "Error al crear la transacción" });
 
-        if (error) return res.status(400).json({ error })
-
-        res.status(201).json({ message: "Transacciones creadas", data })
-    } catch (err) {
-        res.status(500).json({ error: "Error del servidor" })
+        res.status(200).json({ message: "Transacción creada correctamente" });
+    } catch (error) {
+        res.status(500).json({ error: "Error del Servidor" })
     }
 }
 
