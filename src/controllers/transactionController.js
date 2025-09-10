@@ -2,24 +2,31 @@ import { getMonthRange } from '../helpers/getMonthRange.js';
 import { supabase } from '../utils/Supabase.js';
 
 export const addTransaction = async (req, res) => {
-    const { description, amount, type, player_id, months } = req.body
-    // months = ["2025-01-01", "2025-03-01", "2025-07-01"]
+    const { description, amount, type, playerId, dates } = req.body
+
+    if (!description || !amount || !type || !playerId || !dates?.length) {
+        return res.status(400).json({ error: "Faltan parámetros" })
+    }
 
     try {
-        const transactions = months.map((date) => ({
-            description,
-            amount,
-            type,
-            date,
-            player_id,
-        }))
+        // Generar array de transacciones
+        const txs = dates.map((dateStr) => {
+            const d = new Date(dateStr)
+            return {
+                description,
+                amount,
+                type,
+                player_id: playerId,
+                date: new Date(d.getFullYear(), d.getMonth(), 1).toISOString(), // 👈 día 1 del mes
+            }
+        })
 
-        const { data, error } = await supabase.from("transactions").insert(transactions)
+        const { data, error } = await supabase.from("transactions").insert(txs)
 
         if (error) return res.status(400).json({ error })
 
-        res.status(201).json(data)
-    } catch (error) {
+        res.status(201).json({ message: "Transacciones creadas", data })
+    } catch (err) {
         res.status(500).json({ error: "Error del servidor" })
     }
 }
