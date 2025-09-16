@@ -6,15 +6,26 @@ import { supabase } from '../utils/Supabase.js';
 export const addTransaction = async (req, res) => {
     const transactionData = req.body;
     try {
-        const data = await fetch('https://api.bluelytics.com.ar/v2/latest')
-        if (!data) return res.status(404).json({ error: "Error al obtener la cotización del dólar" });
-        const rates = await data.json()
-        const usd_rate = rates?.blue.value_avg // 👈 promedio blue
 
-        const { error } = await supabase.from("transactions").insert([{ ...transactionData, usd_rate }]);
-        if (error) res.status(404).json({ error: "Error al crear la transacción" });
+        if (transactionData.usd_rate === null) {
+            const data = await fetch('https://api.bluelytics.com.ar/v2/latest')
+            if (!data) return res.status(404).json({ error: "Error al obtener la cotización del dólar" });
+            const rates = await data.json()
+            const usd_rate = rates?.blue.value_avg // 👈 promedio blue
 
-        res.status(200).json({ message: "Transacción creada correctamente" });
+            const { error } = await supabase.from("transactions").insert([{ ...transactionData, usd_rate }]);
+            if (error) res.status(404).json({ error: "Error al crear la transacción" });
+
+            res.status(200).json({ message: "Transacción creada correctamente" });
+        } else {
+            const usd_rate = parseFloat(transactionData.usd_rate);
+            const { error } = await supabase.from("transactions").insert([{ ...transactionData, usd_rate }]);
+            if (error) res.status(404).json({ error: "Error al crear la transacción" });
+
+            res.status(200).json({ message: "Transacción creada correctamente" });
+        }
+
+
     } catch (error) {
         res.status(500).json({ error: "Error del Servidor" })
         console.log(error);
