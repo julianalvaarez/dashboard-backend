@@ -5,14 +5,22 @@ import { supabase } from '../utils/Supabase.js';
 
 
 export const addTransaction = async (req, res) => {
-    const { description, amount, date, type, player_id } = req.body
+    const { description, amount, date, type, player_id, currency } = req.body
     try {
         const usd_rate = await getUsdRateForDate(date)
+        if (!usd_rate) res.status(400).json({ error: "No se pudo determinar el valor del dólar para esa fecha" })
 
-        const { data, error } = await supabase
-            .from("transactions")
-            .insert([{ description, amount, date, type, player_id, usd_rate }])
-            .select()
+        let finalAmountPesos
+
+        if (currency === "USD") {
+            // Convertir USD a pesos
+            finalAmountPesos = amount * usd_rate
+        } else {
+            // Ya está en pesos
+            finalAmountPesos = amount
+        }
+
+        const { data, error } = await supabase.from("transactions").insert([{ description, amount: finalAmountPesos, date, type, player_id, usd_rate }]).select()
 
         if (error) return res.status(400).json({ error: "Error al crear transacción" })
 
