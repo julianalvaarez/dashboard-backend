@@ -1,25 +1,30 @@
 import { usdRates } from "../utils/usdRates.js"
+import axios from "axios"
 
 export async function getUsdRateForDate(dateString) {
-    const d = new Date(dateString)
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
+    const d = stripTime(new Date(dateString))        // fecha de la transacción
+    const today = stripTime(new Date())              // fecha actual
 
-    // 🔹 Ver si la fecha es "actual" (hoy o hasta 2 días antes)
-    const today = new Date()
     const diffDays = Math.floor((today - d) / (1000 * 60 * 60 * 24))
 
+    // 🔹 Si la fecha es actual o hasta 2 días antes → pedir a la API
     if (diffDays >= 0 && diffDays <= 2) {
         try {
-            const res = await fetch("https://api.bluelytics.com.ar/v2/latest")
-            const { data } = await res.json()
-            return data.blue.value_avg // promedio compra/venta
+            const { data } = await axios.get("https://api.bluelytics.com.ar/v2/latest")
+            return data?.blue?.value_avg ?? null
         } catch (err) {
-            console.error("Error obteniendo USD actual:", err.message)
-            // fallback a tabla estática si falla la API
+            console.error("Error al obtener USD actual:", err.message)
+            // fallback
+            const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
             return usdRates[key] || null
         }
     }
 
-    // 🔹 Si es histórico, devolver tabla estática
+    // 🔹 Si es histórico → buscar en la tabla
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`
     return usdRates[key] || null
+}
+
+function stripTime(date) {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate())
 }

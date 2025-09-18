@@ -7,7 +7,6 @@ import { supabase } from '../utils/Supabase.js';
 export const addTransaction = async (req, res) => {
     const { description, amount, date, type, player_id } = req.body
     try {
-
         const usd_rate = await getUsdRateForDate(date)
 
         const { data, error } = await supabase
