@@ -48,8 +48,7 @@ export const createFixedTransaction = async (req, res) => {
 export const updateFixedTransaction = async (req, res) => {
     try {
         const { id } = req.params;
-        const updates = { ...req.body, updated_at: new Date().toISOString() };
-        const { data, error } = await supabase.from("fixed_transactions").update(updates).eq("id", id).select();
+        const { data, error } = await supabase.from("fixed_transactions").update(...req.body).eq("id", id).select();
         if (error) return res.status(500).json({ error: error.message });
         res.status(200).json(data[0]);
     } catch (err) {
