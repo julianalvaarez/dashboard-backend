@@ -5,32 +5,44 @@ import { supabase } from '../utils/Supabase.js';
 
 
 export const addTransaction = async (req, res) => {
-    const { description, amount, date, type, player_id, currency } = req.body
     try {
-        const usd_rate = await getUsdRateForDate(date)
-        if (!usd_rate) res.status(400).json({ error: "No se pudo determinar el valor del dólar para esa fecha" })
+        const { player_id, type, description, amount, date, currency = "ARS", is_fixed = false, fixed_day = null, } = req.body;
 
-        let finalAmountPesos
-
-        if (currency === "USD") {
-            // Convertir USD a pesos
-            finalAmountPesos = amount * usd_rate
-        } else {
-            // Ya está en pesos
-            finalAmountPesos = amount
+        if (!player_id || !type || !amount || !date) {
+            return res.status(400).json({ error: "Faltan datos obligatorios" });
         }
 
-        const { data, error } = await supabase.from("transactions").insert([{ description, amount: finalAmountPesos, date, type, player_id, usd_rate }]).select()
+        // Si es movimiento fijo -> insertar en fixed_transactions
+        if (is_fixed) {
+            const toInsert = { player_id, type, description, amount, currency, day_of_month: fixed_day || new Date(date).getDate(), active: true, };
+            const { data, error } = await supabase.from("fixed_transactions").insert([toInsert]).select();
+            if (error) return res.status(500).json({ error: error.message });
+            return res.status(201).json(data[0]);
+        }
 
-        if (error) return res.status(400).json({ error: "Error al crear transacción" })
+        // Si no es fijo -> crear transacción real
+        // Obtener usd_rate para la fecha
+        const usd_rate = await getUsdRateForDate(date);
 
-        res.status(200).json({ message: "Transacción creada correctamente" })
+        // Normalizar amount en pesos (en la base guardamos amount en ARS)
+        let amountPesos = Number(amount);
+        if (currency === "USD") {
+            if (!usd_rate) {
+                return res.status(400).json({ error: "No se pudo determinar el valor del dólar para esa fecha" });
+            }
+            amountPesos = Number(amount) * Number(usd_rate);
+        }
 
+        const insertObj = { player_id, type, description, amount: amountPesos, date: (new Date(date)).toISOString(), usd_rate: usd_rate ?? null, currency: "ARS", created_at: new Date().toISOString(), };
 
+        const { data, error } = await supabase.from("transactions").insert([insertObj]).select();
 
-    } catch (error) {
-        res.status(500).json({ error: "Error del Servidor" })
-        console.log(error);
+        if (error) return res.status(500).json({ error: error.message });
+
+        res.status(201).json(data[0]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Error del servidor" });
     }
 }
 
