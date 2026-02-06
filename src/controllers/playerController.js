@@ -1,4 +1,3 @@
-import { getMonthRange } from '../helpers/getMonthRange.js';
 import { supabase } from '../utils/Supabase.js';
 
 export const getPlayers = async (req, res) => {
