@@ -24,7 +24,7 @@ export const updateFixedTransaction = async (req, res) => {
     try {
         const { error } = await supabase.from("fixed_transactions").update([{ ...transactionData }]).eq("id", id);
 
-        if (error) res.status(404).json({ error: "Error al actualizar la transacción" });
+        if (error) return res.status(404).json({ error: "Error al actualizar la transacción" });
 
         res.status(200).json({ message: "Transacción actualizada correctamente" });
     } catch (error) {
@@ -38,7 +38,7 @@ export const deleteFixedTransaction = async (req, res) => {
     try {
         const { error } = await supabase.from("fixed_transactions").delete().eq("id", id);
 
-        if (error) res.status(404).json({ error: "Error al eliminar la transacción" });
+        if (error) return res.status(404).json({ error: "Error al eliminar la transacción" });
 
         res.status(200).json({ message: "Transacción eliminada correctamente" });
     } catch (error) {
@@ -66,7 +66,7 @@ export const getFixedTransactionsByPlayer = async (req, res) => {
     try {
         const { data, error } = await supabase.from("fixed_transactions").select().eq("player_id", playerId)
 
-        if (error) res.status(404).json({ error: "Error al obtener las transacciones fijas" });
+        if (error) return res.status(404).json({ error: "Error al obtener las transacciones fijas" });
 
         res.status(200).json(data);
     } catch (error) {
