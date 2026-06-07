@@ -8,7 +8,7 @@ export const addTransaction = async (req, res) => {
     const { description, amount, date, type, player_id, currency } = req.body
     try {
         const usd_rate = await getUsdRateForDate(date)
-        if (!usd_rate) res.status(400).json({ error: "No se pudo determinar el valor del dólar para esa fecha" })
+        if (!usd_rate) return res.status(400).json({ error: "No se pudo determinar el valor del dólar para esa fecha" })
 
         let finalAmountPesos
 
@@ -24,7 +24,7 @@ export const addTransaction = async (req, res) => {
 
         if (error) return res.status(400).json({ error: "Error al crear transacción" })
 
-        res.status(200).json({ message: "Transacción creada correctamente" })
+        res.status(200).json(data[0])
 
 
 
