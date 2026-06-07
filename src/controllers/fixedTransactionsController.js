@@ -5,7 +5,7 @@ import { supabase } from '../utils/Supabase.js';
 export const addFixedTransaction = async (req, res) => {
     const { description, amount, type, player_id, currency } = req.body
     try {
-        const { data, error } = await supabase.from("fixed_transactions").insert([{ description, amount, type, player_id, currency }]).select()
+        const { data, error } = await supabase.from("fixed_transactions").insert([{ description, amount: Math.round(amount), type, player_id, currency }]).select()
 
         if (error) return res.status(400).json({ error: "Error al crear transacción fija" })
 

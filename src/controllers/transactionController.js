@@ -14,15 +14,26 @@ export const addTransaction = async (req, res) => {
 
         if (currency === "USD") {
             // Convertir USD a pesos
-            finalAmountPesos = amount * usd_rate
+            finalAmountPesos = Math.round(amount * usd_rate)
         } else {
             // Ya está en pesos
-            finalAmountPesos = amount
+            finalAmountPesos = Math.round(amount)
         }
 
-        const { data, error } = await supabase.from("transactions").insert([{ description, amount: finalAmountPesos, date, type, player_id, usd_rate }]).select()
+        console.log("Inserción de transacción:", { description, amount: finalAmountPesos, date, type, player_id, usd_rate: Math.round(usd_rate) });
+        const { data, error } = await supabase.from("transactions").insert([{
+            description,
+            amount: finalAmountPesos,
+            date,
+            type,
+            player_id,
+            usd_rate: Math.round(usd_rate)
+        }]).select()
 
-        if (error) return res.status(400).json({ error: "Error al crear transacción", errorData: error })
+        if (error) {
+            console.error("Supabase Error:", error);
+            return res.status(400).json({ error: "Error al crear transacción", errorData: error })
+        }
 
         res.status(200).json(data[0])
 
