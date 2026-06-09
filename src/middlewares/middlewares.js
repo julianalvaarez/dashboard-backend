@@ -1,9 +1,7 @@
-
-
 export const addPlayerMiddleware = (req, res, next) => {
-    if (req.body.name && req.body.birth_date) {
+    if (req.body && req.body.name && req.body.birth_date) {
         next();
     } else {
-        res.send("Data incompleta");
+        res.status(400).send("Data incompleta");
     }
 }

@@ -7,8 +7,8 @@ import { aiRoutes } from "./routes/aiRoutes.js";
 
 export const router = Router()
 
+router.use(aiRoutes)
 router.use(transactionRoutes)
 router.use(fixedTransactionRoutes)
 router.use(playerRoutes)
 router.use(documentsRoutes)
-router.use(aiRoutes)
